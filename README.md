@@ -1,7 +1,9 @@
 # LibraLink
 
 ## Description
-LibraLink is a library management system currently under development. The project aims to incorporate both basic and advanced functionalities over time, enhancing the overall library management experience.
+LibraLink is a library management system that I built mainly for library admins. It has features like user sign-in, managing books, book copies, premium members, employees, and tracking book checkouts. It also has a dashboard that shows cool graphs and stats about everything happening in the library.
+
+The project aims to incorporate both basic and advanced functionalities over time, enhancing the overall library management experience.
 
 ## Prerequisites
 Before you begin, ensure you have met the following requirements:
