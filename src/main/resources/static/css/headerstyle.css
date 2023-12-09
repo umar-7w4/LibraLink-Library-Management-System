@@ -1,0 +1,51 @@
+/* Custom Header Styling */
+.custom-header {
+    background-color: #333; /* Background color */
+    color: #fff; /* Text color */
+    padding: 10px 0;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #fff; /* Link color */
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: #555; /* Hover color */
+}
+
+.divider {
+    width: 2px;
+    height: 20px;
+    background-color: #fff; /* Divider color */
+}
+
+.admin-link {
+    background-color: #28a745; /* Admin link color */
+    font-weight: bold;
+}
+
+.logout-button {
+    background-color: #dc3545; /* Logout button color */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.logout-button:hover {
+    opacity: 0.8;
+}

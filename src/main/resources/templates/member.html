@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Member Management</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+
+    <div class="member-management-container">
+        <!-- Form for Adding a New Member -->
+        <div class="member-form">
+            <h1>Add Premium Subscription</h1>
+            <img class="generalBookImage" src="https://th.bing.com/th/id/R.f7796bf18c3b3eca8acbd328904b2e13?rik=DyWuJ2%2bHEQMCsg&pid=ImgRaw&r=0" />
+            
+            <form id="addMemberForm">
+                <input type="text" name="firstName" placeholder="First Name" required />
+                <input type="text" name="lastName" placeholder="Last Name" required />
+                <input type="number" name="phoneNumber" placeholder="Phone Number" required />
+                <input type="email" name="email" placeholder="Email" required />
+                <input type="number" name="houseNo" placeholder="House No" required />
+                <input type="text" name="lane" placeholder="Lane" required />
+                <input type="text" name="address1" placeholder="Address Line 1" required />
+                <input type="text" name="address2" placeholder="Address Line 2" />
+                <input type="text" name="city" placeholder="City" required />
+                <input type="text" name="state" placeholder="State" required />
+                <input type="number" name="pincode" placeholder="Pincode" required />
+                <h3>Enter Membership Expiration Date</h3>
+                <input type="date" name="membershipExpirationDate" placeholder="Membership Expiration Date" required />
+                <button type="submit">Add Member</button>
+            </form>
+            <div id="memberMessage"></div>
+        </div>
+
+        <button id="listMembersButton">List All Members</button>
+
+        <!-- Edit Member Form -->
+        <div id="editMemberFormContainer" style="display:none;">
+            <h2>Edit Member</h2>
+            <form id="editMemberForm">
+                <input type="hidden" name="memberId" id="editMemberId" />
+                <input type="text" name="firstName" id="editFirstName" placeholder="First Name" required />
+                <input type="text" name="lastName" id="editLastName" placeholder="Last Name" required />
+                <input type="number" name="phoneNumber" id="editPhoneNumber" placeholder="Phone Number" required />
+                <input type="email" name="email" id="editEmail" placeholder="Email" required />
+                <input type="number" name="houseNo" id="editHouseNo" placeholder="House No" required />
+                <input type="text" name="lane" id="editLane" placeholder="Lane" required />
+                <input type="text" name="address1" id="editAddress1" placeholder="Address Line 1" required />
+                <input type="text" name="address2" id="editAddress2" placeholder="Address Line 2" />
+                <input type="text" name="city" id="editCity" placeholder="City" required />
+                <input type="text" name="state" id="editState" placeholder="State" required />
+                <input type="number" name="pincode" id="editPincode" placeholder="Pincode" required />
+                <h3>Enter Membership Expiration Date</h3>
+                <input type="date" name="membershipExpirationDate" id="editMembershipExpirationDate" placeholder="Membership Expiration Date" required />
+                <br>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+
+        <div id="membersListContainer"></div>
+    </div>
+
+    <!-- CSRF token variables -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var csrfToken = /*[[${_csrf.token}]]*/ 'default';
+        var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
+        /*]]>*/
+    </script>
+
+    <!-- AJAX request to handle form submission -->
+    <script>
+        document.getElementById('addMemberForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData);
+            fetch('/libralink-member/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(jsonData),
+            })
+            .then(response => {
+                if(response.ok) {
+                    return response.json();
+                }
+                return response.json().then(err => { throw err; });
+            })
+            .then(data => {
+                console.log(data);
+                document.getElementById('memberMessage').textContent = 'Member added successfully!';
+                document.getElementById('memberMessage').style.color = 'green';
+                document.getElementById('addMemberForm').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                let errorMessage = 'Incorrect information entered';
+                if (error.message) {
+                    errorMessage = "Incorrect information entered";
+                }
+                document.getElementById('memberMessage').textContent = errorMessage;
+                document.getElementById('memberMessage').style.color = 'red';
+            });
+        });
+
+        // Function to display the list of members
+        document.getElementById('listMembersButton').addEventListener('click', function() {
+            fetch('/libralink-member/list')
+                .then(response => response.json())
+                .then(members => {
+                    const listContainer = document.getElementById('membersListContainer');
+                    listContainer.innerHTML = ''; // Clear the container
+
+					members.forEach(member => {
+					    const memberItem = document.createElement('div');
+					    memberItem.classList.add('member-item'); // Add class for styling if needed
+					    memberItem.innerHTML = `
+					        <h3>${member.firstName} ${member.lastName}</h3>
+					        <p>Email: ${member.email}</p>
+					        <p>Phone: ${member.phoneNumber}</p>
+					        <p>Address: ${member.houseNo} ${member.lane}, ${member.address1}, ${member.address2}</p>
+					        <p>City: ${member.city}</p>
+					        <p>State: ${member.state}</p>
+					        <p>Pincode: ${member.pincode}</p>
+					        <p>Membership Expiry: ${member.membershipExpirationDate}</p>
+					        <button onclick="editMember(${member.memberId})">Edit</button>
+					        <br>
+					        <button onclick="deleteMember(${member.memberId})">Delete</button>
+					    `;
+					    listContainer.appendChild(memberItem);
+					});
+
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+		function editMember(memberId) {
+		    fetch(`/libralink-member/get/${memberId}`)
+		        .then(response => {
+		            if (response.ok) {
+		                return response.json();
+		            } else {
+		                throw new Error('Failed to fetch member details');
+		            }
+		        })
+		        .then(member => {
+		            // Fill the form with the current member's data
+		            document.getElementById('editMemberId').value = member.memberId;
+		            document.getElementById('editFirstName').value = member.firstName;
+		            document.getElementById('editLastName').value = member.lastName;
+		            document.getElementById('editPhoneNumber').value = member.phoneNumber;
+		            document.getElementById('editEmail').value = member.email;
+		            document.getElementById('editHouseNo').value = member.houseNo;
+		            document.getElementById('editLane').value = member.lane;
+		            document.getElementById('editAddress1').value = member.address1;
+		            document.getElementById('editAddress2').value = member.address2;
+		            document.getElementById('editCity').value = member.city;
+		            document.getElementById('editState').value = member.state;
+		            document.getElementById('editPincode').value = member.pincode;
+		            document.getElementById('editMembershipExpirationDate').value = member.membershipExpirationDate;
+		            
+		            // Show the edit form
+		            document.getElementById('editMemberFormContainer').style.display = 'block';
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		        });
+		}
+		
+		// Function to handle the update member form submission
+        document.getElementById('editMemberForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData);
+
+            fetch(`/libralink-member/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => {
+                if(response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to update member');
+                }
+            })
+            .then(data => {
+                console.log('Member updated successfully');
+                document.getElementById('editMemberFormContainer').style.display = 'none';
+                // Refresh the member list
+                document.getElementById('listMembersButton').click(); 
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+
+		function deleteMember(memberId) {
+		    if (confirm('Are you sure you want to delete this member?')) {
+		        fetch(`/libralink-member/delete/${memberId}`, {
+		            method: 'DELETE',
+		            headers: {
+		                [csrfHeader]: csrfToken  // Include CSRF token if required
+		            }
+		        })
+		        .then(response => {
+		            if(response.ok) {
+		                // Remove the member from the list in the UI or refresh the list
+		                console.log('Member deleted successfully');
+		            } else {
+		                throw new Error('Failed to delete member');
+		            }
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		        });
+		    }
+		}
+
+    </script>
+
+</body>
+</html>

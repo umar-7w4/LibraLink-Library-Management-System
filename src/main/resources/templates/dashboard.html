@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>LibraLink Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+    <h1 id="dashboard-heading">LibraLink Dashboard</h1>
+        
+    <section class="dashboard">
+		<div class="welcome-message">
+	        <h2>Welcome, <span th:text="${user != null} ? ${user.username} : 'Umar123'">User</span>!</h2>
+	    </div>
+	    
+		<div class="dashboard-item books">
+		    <h3>Total Books</h3>
+		    <p>Number of Books: </p>
+		    <p><span class="count" id="bookCount">0</span></p>
+		</div>
+		
+		<div class="dashboard-item members">
+		    <h3>Total Premium Members</h3>
+		    <p>Number of Members: </p>
+		    <p><span class="count" id="memberCount">0</span></p>
+		</div>
+		
+		<div class="dashboard-item employees">
+		    <h3>Total Employees</h3>
+		    <p>Number of Employees: </p>
+		    <p><span class="count" id="employeeCount">0</span></p>
+		</div>
+	
+
+    </section>
+    
+    <section>
+	    <div class="charts-container">
+	        <div class="chart-section">
+	            <h2 class="chart-title">Book Genre Distribution - Bar Chart</h2>
+	            <canvas id="barChart"></canvas>
+	        </div>
+	        <div class="chart-section">
+	            <h2 class="chart-title">Book Genre Distribution - Line Chart</h2>
+	            <canvas id="lineChart"></canvas>
+	        </div>
+	        <div class="chart-section">
+	            <h2 class="chart-title">Book Genre Distribution - Pie Chart</h2>
+	            <canvas id="pieChart"></canvas>
+	        </div>
+	    </div>  
+	</section>
+	<br><br>
+	<section>
+	    <div class="charts-container">
+			<div class="chart-section">
+	            <h2 class="chart-title">Book Author Distribution - Line Chart</h2>
+	            <canvas id="lineChartAuthor"></canvas>
+	        </div>
+	        <div class="chart-section">
+	            <h2 class="chart-title">Book Author Distribution - Bar Chart</h2>
+	            <canvas id="barChartAuthor"></canvas>
+	        </div>
+	        <div class="chart-section">
+	            <h2 class="chart-title">Book Author Distribution - Pie Chart</h2>
+	            <canvas id="pieChartAuthor"></canvas>
+	        </div>
+	    </div>  
+	</section>
+	<br><br>
+	<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchCurrentUser();
+            updateDashboardCounts();
+            initCharts();
+            initChartsForBookAuthor();
+        });
+        
+        function fetchCurrentUser() {
+		    fetch('/auth/current')
+		        .then(response => {
+		            if (response.ok) {
+		                return response.json();
+		            } else {
+		                throw new Error('User not found');
+		            }
+		        })
+		        .then(userData => {
+		            if (userData && userData.username) {
+		                document.querySelector('.welcome-message h2 span').textContent = userData.username;
+		            } else {
+		                document.querySelector('.welcome-message h2 span').textContent = 'Guest';
+		            }
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		            document.querySelector('.welcome-message h2 span').textContent = 'Guest';
+		        });
+		}
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+            updateDashboardCounts();
+        });
+
+        function updateDashboardCounts() {
+            // Fetch Total Books
+            fetch('/libralink-book/books/count')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("bookCount").textContent = data.count;
+                })
+                .catch(error => console.error('Error fetching total books:', error));
+
+            // Fetch Total Members
+            fetch('/libralink-member/members/count')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("memberCount").textContent = data.count;
+                })
+                .catch(error => console.error('Error fetching total members:', error));
+
+            // Fetch Total Employees
+            fetch('/libralink-employee/employees/count')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("employeeCount").textContent = data.count;
+                })
+                .catch(error => console.error('Error fetching total employees:', error));
+        }
+        
+
+    function initCharts() {
+            // Assume fetchChartData() fetches the required chart data
+            fetchChartData().then(chartData => {
+                const labels = Object.keys(chartData);
+                const data = Object.values(chartData);
+                const backgroundColors = labels.map(label => dynamicColors());
+
+                createChart('barChart', 'bar', labels, data, backgroundColors);
+                createChart('lineChart', 'line', labels, data, backgroundColors);
+                createChart('pieChart', 'pie', labels, data, backgroundColors);
+            }).catch(error => {
+                console.error('Error fetching chart data:', error);
+            });
+        }
+
+    function initChartsForBookAuthor() {
+            // Assume fetchChartData() fetches the required chart data
+            fetchChartDataForBookAuthor().then(chartData => {
+                const labels = Object.keys(chartData);
+                const data = Object.values(chartData);
+                const backgroundColors = labels.map(label => dynamicColors());
+
+                createChart('barChartAuthor', 'bar', labels, data, backgroundColors);
+                createChart('lineChartAuthor', 'line', labels, data, backgroundColors);
+                createChart('pieChartAuthor', 'pie', labels, data, backgroundColors);
+            }).catch(error => {
+                console.error('Error fetching chart data:', error);
+            });
+        }
+        
+    // This function should be modified to call your actual API endpoint
+    function fetchChartData() {
+        // Replace '/api/chart-data' with your endpoint that provides genre count
+        return fetch('/libralink-book/genre-count')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+    
+    function fetchChartDataForBookAuthor(){
+		return fetch('/libralink-book/author-count').then(response => {
+			if(!response.ok){
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+	}
+
+    function dynamicColors() {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r},${g},${b},0.7)`;
+        }
+
+
+    
+	function createChart(canvasId, type, labels, data, backgroundColors) {
+	    const ctx = document.getElementById(canvasId).getContext('2d');
+	    new Chart(ctx, {
+	        type: type,
+	        data: {
+	            labels: labels,
+	            datasets: [{
+	                label: 'Genre Distribution',
+	                data: data,
+	                backgroundColor: backgroundColors,
+	                borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+	                borderWidth: 1
+	            }]
+	        },
+	        options: {
+	            responsive: true,
+	            maintainAspectRatio: true,
+	            aspectRatio: 1.5, 
+	            animation: {
+	                duration: 2000,
+	                easing: 'easeOutBounce'
+	            },
+	            plugins: {
+	                legend: {
+	                    display: false
+	                },
+	                tooltip: {
+	                    enabled: true,
+	                    mode: 'index',
+	                    intersect: false,
+	                }
+	            }
+	        }
+	    });
+	}
+	
+	
+
+</script>
+    
+
+	
+</body>
+</html>

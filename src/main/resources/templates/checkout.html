@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Checkout Management</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+
+    <div class="checkout-management-container">
+        <!-- Form for Adding a New Checkout -->
+        <div class="checkout-form">
+            <h1>Checkout Book Copy</h1>
+             <img class="generalBookImage" src="https://cdn-icons-png.flaticon.com/512/2530/2530626.png" alt="General Book Image" />
+            <form id="addCheckoutForm">
+				<div class="search-field">
+                    <input type="text" id="memberSearch" placeholder="Search Member" />
+                    <ul id="memberSearchResults"></ul>
+                    <input type="hidden" name="memberId" id="selectedMemberId" required />
+                </div>
+				<div class="search-field">
+				    <input type="text" id="bookCopySearch" placeholder="Search Book Copy" />
+				    <ul id="bookCopySearchResults"></ul>
+				    <input type="hidden" name="bookCopyId" id="selectedBookCopyId" required />
+				</div>
+				<h3>Enter Checkout Date</h3>
+                <input type="date" name="checkoutDate" placeholder="Checkout Date" required />
+                <h3>Enter Return Date</h3>
+                <input type="date" name="returnDate" placeholder="Return Date" required />
+                <h3>Enter Due Date</h3>
+                <input type="date" name="dueDate" placeholder="Due Date" required />
+                <button type="submit">Add Checkout</button>
+            </form>
+            <div id="checkoutMessage"></div>
+        </div>
+
+        <button id="listCheckoutsButton">List All Checkouts</button>
+
+		<div id="editCheckoutFormContainer" style="display:none;">
+		    <h2>Edit Checkout</h2>
+		    <form id="editCheckoutForm">
+		        <input type="hidden" name="checkoutId" id="editCheckoutId" />
+		
+		        <!-- Lookup Field for Member -->
+		        <div class="search-field">
+		            <input type="text" id="editMemberSearch" placeholder="Search Member" />
+		            <ul id="editMemberSearchResults"></ul>
+		            <input type="hidden" name="memberId" id="editSelectedMemberId" required />
+		        </div>
+		
+		        <!-- Lookup Field for Book Copy -->
+		        <div class="search-field">
+		            <input type="text" id="editBookCopySearch" placeholder="Search Book Copy" />
+		            <ul id="editBookCopySearchResults"></ul>
+		            <input type="hidden" name="bookCopyId" id="editSelectedBookCopyId" required />
+		        </div>
+		        <h3>Enter Checkout Date</h3>
+		        <input type="date" name="checkoutDate" id="editCheckoutDate" required />
+		        <h3>Enter Return Date</h3>
+		        <input type="date" name="returnDate" id="editReturnDate" required />
+		        <h3>Enter Due Date</h3>
+		        <input type="date" name="dueDate" id="editDueDate" required />
+		        <br>
+		        <button type="submit">Save Changes</button>
+		    </form>
+		</div>
+
+        <div id="checkoutsListContainer"></div>
+    </div>
+
+    <!-- CSRF token variables -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var csrfToken = /*[[${_csrf.token}]]*/ 'default';
+        var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
+        /*]]>*/
+    </script>
+
+    <!-- JavaScript for Checkout Operations -->
+    <script>
+		document.getElementById('listCheckoutsButton').addEventListener('click', function() {
+		        listCheckouts();
+		    });
+		
+		    // Function to List All Checkouts
+		    function listCheckouts() {
+		        fetch('/libralink-checkout/list', {
+		            method: 'GET',
+		            headers: {
+		                'Content-Type': 'application/json',
+		            },
+		        })
+		        .then(response => {
+		            if (response.ok) {
+		                return response.json();
+		            }
+		            throw new Error('Failed to fetch checkout records');
+		        })
+		        .then(checkouts => {
+		            const checkoutsListContainer = document.getElementById('checkoutsListContainer');
+		            checkoutsListContainer.innerHTML = ''; // Clear previous records
+		
+		            // Loop through the checkout records and display them
+		            checkouts.forEach(checkout => {
+		                const checkoutItem = document.createElement('div');
+		                checkoutItem.innerHTML = `
+		                    
+		                    <p>Member : ${checkout.member.firstName} ${checkout.member.lastName}</p>
+		                    <p>Book : ${checkout.bookCopy.book.title} - ${checkout.bookCopy.branch.branchName} - ${checkout.bookCopy.status}</p>
+		                    <p>Checkout Date: ${checkout.checkoutDate}</p>
+		                    <p>Return Date: ${checkout.returnDate}</p>
+		                    <p>Due Date: ${checkout.dueDate}</p>
+		                    <button onclick="editCheckout(${checkout.checkoutId})">Edit</button>
+		                    <br>
+		                    <button onclick="deleteCheckout(${checkout.checkoutId})">Delete</button>
+		                `;
+		                checkoutsListContainer.appendChild(checkoutItem);
+		            });
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		            // Display an error message to the user
+		            const errorMessage = document.getElementById('checkoutErrorMessage');
+		            errorMessage.textContent = 'An error occurred while fetching checkout records.';
+		            errorMessage.style.color = 'red';
+		        });
+		    }
+    
+        // Add Checkout Form Submission
+        document.getElementById('addCheckoutForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData);
+            // Call the function to add a new checkout
+            addCheckout(jsonData);
+        });
+
+		function addCheckout(checkoutData) {
+		    // Parse memberId and bookCopyId as integers and wrap them in objects
+		    const payload = {
+		        member: { memberId: parseInt(checkoutData.memberId) },
+		        bookCopy: { bookCopyId: parseInt(checkoutData.bookCopyId) },
+		        checkoutDate: checkoutData.checkoutDate,
+		        returnDate: checkoutData.returnDate,
+		        dueDate: checkoutData.dueDate
+		    };
+		    console.log(payload);
+		    fetch('/libralink-checkout/add', {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(payload),
+		    })
+		    .then(response => {
+		        if(response.ok) {
+		            return response.json();
+		        }
+		        throw new Error('Failed to add checkout');
+		    })
+		    .then(data => {
+		        document.getElementById('checkoutMessage').textContent = 'Checkout added successfully';
+		        // Additional logic...
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        document.getElementById('checkoutMessage').textContent = error.message;
+		    });
+		}
+
+// Function to search for members
+function searchMember(query, isEditMode) {
+    fetch(`/libralink-member/search?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch member search results'))
+    .then(memberResults => displayMemberResults(memberResults, isEditMode))
+    .catch(error => console.error('Error:', error));
+}
+
+// Function to display member search results
+function displayMemberResults(memberResults, isEditMode) {
+    const memberSearchResultsId = isEditMode ? 'editMemberSearchResults' : 'memberSearchResults';
+    const memberSearchResults = document.getElementById(memberSearchResultsId);
+    memberSearchResults.innerHTML = '';
+
+    memberResults.forEach(member => {
+        const memberItem = document.createElement('li');
+        memberItem.textContent = `${member.firstName} ${member.lastName}`;
+        memberItem.addEventListener('click', () => selectMember(member.memberId, `${member.firstName} ${member.lastName}`, isEditMode));
+        memberSearchResults.appendChild(memberItem);
+    });
+}
+
+// Function to handle selecting a member from search results
+function selectMember(memberId, memberName, isEditMode) {
+    const selectedMemberIdField = document.getElementById(isEditMode ? 'editSelectedMemberId' : 'selectedMemberId');
+    const memberSearchField = document.getElementById(isEditMode ? 'editMemberSearch' : 'memberSearch');
+
+    selectedMemberIdField.value = memberId;
+    memberSearchField.value = memberName;
+    const memberSearchResults = document.getElementById(isEditMode ? 'editMemberSearchResults' : 'memberSearchResults');
+    memberSearchResults.innerHTML = '';
+}
+
+// Function to search for book copies
+function searchBookCopy(query, isEditMode) {
+    fetch(`/libralink-bookcopy/search?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch book copy search results'))
+    .then(bookCopyResults => displayBookCopyResults(bookCopyResults, isEditMode))
+    .catch(error => console.error('Error:', error));
+}
+
+// Function to display book copy search results
+function displayBookCopyResults(bookCopyResults, isEditMode) {
+    const bookCopySearchResultsId = isEditMode ? 'editBookCopySearchResults' : 'bookCopySearchResults';
+    const bookCopySearchResults = document.getElementById(bookCopySearchResultsId);
+    bookCopySearchResults.innerHTML = '';
+
+    bookCopyResults.forEach(bookCopy => {
+        const bookCopyItem = document.createElement('li');
+        bookCopyItem.textContent = `${bookCopy.book.title} - ${bookCopy.branch.branchName} - ${bookCopy.status}`;
+        bookCopyItem.addEventListener('click', () => selectBookCopy(bookCopy.bookCopyId, `${bookCopy.book.title}, ${bookCopy.branch.branchName}, ${bookCopy.status}`, isEditMode));
+        bookCopySearchResults.appendChild(bookCopyItem);
+    });
+}
+
+// Function to handle selecting a book copy from search results
+function selectBookCopy(bookCopyId, bookCopyDetails, isEditMode) {
+    const selectedBookCopyIdField = document.getElementById(isEditMode ? 'editSelectedBookCopyId' : 'selectedBookCopyId');
+    const bookCopySearchField = document.getElementById(isEditMode ? 'editBookCopySearch' : 'bookCopySearch');
+
+    selectedBookCopyIdField.value = bookCopyId;
+    bookCopySearchField.value = bookCopyDetails;
+    const bookCopySearchResults = document.getElementById(isEditMode ? 'editBookCopySearchResults' : 'bookCopySearchResults');
+    bookCopySearchResults.innerHTML = '';
+}
+
+// Add event listeners to the search fields in the "Add Checkout" form
+document.getElementById('memberSearch').addEventListener('input', function() {
+    searchMember(this.value, false);
+});
+
+document.getElementById('bookCopySearch').addEventListener('input', function() {
+    searchBookCopy(this.value, false);
+});
+
+// Add event listeners to the search fields in the "Edit Checkout" form
+document.getElementById('editMemberSearch').addEventListener('input', function() {
+    searchMember(this.value, true);
+});
+
+document.getElementById('editBookCopySearch').addEventListener('input', function() {
+    searchBookCopy(this.value, true);
+});
+
+		        
+        
+
+function editCheckout(checkoutId) {
+    fetch(`/libralink-checkout/get/${checkoutId}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to fetch checkout details');
+            }
+        })
+        .then(checkout => {
+            // Check if the editCheckoutId element exists
+            const editCheckoutId = document.getElementById('editCheckoutId');
+            if (!editCheckoutId) {
+                console.error('editCheckoutId element not found');
+                return;
+            }
+
+            // Populate the form fields with checkout data
+            if (checkout.checkoutId) {
+                editCheckoutId.value = checkout.checkoutId;
+            }
+            const editMemberSelect = document.getElementById('editMemberSelect');
+            if (editMemberSelect) {
+                editMemberSelect.value = checkout.member.memberId; // Assuming member is an object
+            }
+            const editBookSelect = document.getElementById('editBookSelect');
+            if (editBookSelect) {
+                editBookSelect.value = checkout.bookCopy.bookCopyId; // Assuming bookCopy is an object
+            }
+            const editCheckoutDate = document.getElementById('editCheckoutDate');
+            if (editCheckoutDate) {
+                editCheckoutDate.value = checkout.checkoutDate;
+            }
+            const editReturnDate = document.getElementById('editReturnDate');
+            if (editReturnDate) {
+                editReturnDate.value = checkout.returnDate;
+            }
+            const editDueDate = document.getElementById('editDueDate');
+            if (editDueDate) {
+                editDueDate.value = checkout.dueDate;
+            }
+
+            const editCheckoutFormContainer = document.getElementById('editCheckoutFormContainer');
+            if (editCheckoutFormContainer) {
+                editCheckoutFormContainer.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorMessage = document.getElementById('checkoutErrorMessage');
+            errorMessage.textContent = 'An error occurred while editing the checkout.';
+            errorMessage.style.color = 'red';
+        });
+}
+
+
+		
+// Event listener for editing a checkout
+document.getElementById('editCheckoutForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const checkoutId = formData.get('checkoutId');
+    const jsonData = {
+            checkoutId: parseInt(formData.get('checkoutId')),
+            member: {
+                memberId: parseInt(formData.get('memberId')),
+            },
+            bookCopy: {
+                bookCopyId: parseInt(formData.get('bookCopyId')),
+            },
+            checkoutDate: formData.get('checkoutDate'),
+            returnDate: formData.get('returnDate'),
+       
+    };
+
+    // Call the updateCheckout function to update the checkout
+    updateCheckout(checkoutId, jsonData);
+});
+
+// Function to update a checkout
+function updateCheckout(checkoutId, checkoutData) {
+	console.log(checkoutData);
+    // Send the entire updated checkout object to the backend
+    fetch('/libralink-checkout/update', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken,
+        },
+        body: JSON.stringify(checkoutData), // Send the entire checkoutData object
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update checkout');
+        }
+        // Handle the success response or refresh the list
+        return response.json(); // You can return data from the server if needed
+    })
+    .then(data => {
+        // Handle the success response or refresh the list
+        console.log('Checkout updated successfully:', data);
+        // Additional logic...
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Display error message or handle the error
+    });
+}
+
+	    
+	    function deleteCheckout(checkoutId) {
+		    if (confirm('Are you sure you want to delete this checkout?')) {
+		        fetch(`/libralink-checkout/delete/${checkoutId}`, {
+		            method: 'DELETE',
+		            headers: {
+		                [csrfHeader]: csrfToken,
+		            },
+		        })
+		        .then(response => {
+		            if (response.ok) {
+		                // Handle the successful deletion
+		                console.log('Checkout deleted successfully');
+		            } else {
+		                throw new Error('Failed to delete checkout');
+		            }
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		            // Display an error message to the user
+		            const errorMessage = document.getElementById('checkoutErrorMessage');
+		            errorMessage.textContent = 'An error occurred while deleting the checkout.';
+		            errorMessage.style.color = 'red';
+		        });
+		    }
+		}
+    </script>
+
+</body>
+</html>

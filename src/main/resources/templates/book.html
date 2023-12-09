@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book Management</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+
+    <div class="book-management-container">
+        <!-- Form for Adding a New Book -->
+        <div class="book-form">
+            <h1>Register Book Records</h1>
+            <img class="generalBookImage" src="https://i.pinimg.com/originals/7d/5a/aa/7d5aaa0eefdc25018534c3dfb5546d7e.jpg" alt="General Book Image" />
+            <form id="addBookForm">
+                <input type="text" name="title" placeholder="Title" required />
+                <input type="text" name="author" placeholder="Author" required />
+                <input type="text" name="isbn" placeholder="ISBN" required />
+                <input type="text" name="genre" placeholder="Genre" required />
+                <input type="text" name="publisher" placeholder="Publisher" required />
+                <h3>Enter Publication Date</h3>
+        
+                <input type="date" name="publicationDate" placeholder="Publication Date" required />
+                <button type="submit">Add Book</button>
+            </form>
+            <div id="message"></div>
+        </div>
+
+        <button id="listBooksButton">List All Books</button>
+        
+        <!-- Edit Book Form -->
+        <div id="editBookFormContainer" style="display:none;">
+            <h2>Edit Book</h2>
+            <form id="editBookForm">
+                <input type="hidden" name="bookId" id="editBookId" />
+                <input type="text" name="title" id="editTitle" placeholder="Title" required />
+                <input type="text" name="author" id="editAuthor" placeholder="Author" required />
+                <input type="text" name="isbn" id="editIsbn" placeholder="ISBN" required />
+                <input type="text" name="genre" id="editGenre" placeholder="Genre" required />
+                <input type="text" name="publisher" id="editPublisher" placeholder="Publisher" required />
+                <h3>Enter Publication Date</h3>
+                <input type="date" name="publicationDate" id="editPublicationDate" placeholder="Publication Date" required />
+                <br>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+        
+        <!-- Placeholder for General Book Image -->
+    
+        
+        <div id="booksListContainer"></div>
+    </div>
+
+    <!-- CSRF token variables -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var csrfToken = /*[[${_csrf.token}]]*/ 'default';
+        var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
+        /*]]>*/
+    </script>
+
+    <script>
+        document.getElementById('addBookForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData);
+
+            fetch('/libralink-book/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(jsonData),
+            })
+            .then(response => {
+                if(response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to add book');
+            })
+            .then(data => {
+                document.getElementById('message').textContent = 'Book added successfully!';
+                document.getElementById('message').style.color = 'green';
+                this.reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'Failed to add book';
+                document.getElementById('message').style.color = 'red';
+            });
+        });
+
+        document.getElementById('listBooksButton').addEventListener('click', function() {
+            fetch('/libralink-book/list')
+            .then(response => response.json())
+            .then(books => {
+                const listContainer = document.getElementById('booksListContainer');
+                listContainer.innerHTML = '';
+                books.forEach(book => {
+                    const bookItem = document.createElement('div');
+                    bookItem.innerHTML = `
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <p>ISBN: ${book.isbn}</p>
+                        <p>Genre: ${book.genre}</p>
+                        <p>Publisher: ${book.publisher}</p>
+                        <p>Publication Date: ${book.publicationDate}</p>
+                        <button onclick="editBook(${book.bookId})">Edit</button>
+                        <br>
+                        <button onclick="deleteBook(${book.bookId})">Delete</button>
+                    `;
+                    listContainer.appendChild(bookItem);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function editBook(bookId) {
+            fetch(`/libralink-book/get/${bookId}`)
+            .then(response => response.json())
+            .then(book => {
+                document.getElementById('editBookId').value = book.bookId;
+                document.getElementById('editTitle').value = book.title;
+                document.getElementById('editAuthor').value = book.author;
+                document.getElementById('editIsbn').value = book.isbn;
+                document.getElementById('editGenre').value = book.genre;
+                document.getElementById('editPublisher').value = book.publisher;
+                document.getElementById('editPublicationDate').value = book.publicationDate;
+                document.getElementById('editBookFormContainer').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('editBookForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData);
+
+            fetch(`/libralink-book/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editBookFormContainer').style.display = 'none';
+                document.getElementById('listBooksButton').click();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function deleteBook(bookId) {
+            if (confirm('Are you sure you want to delete this book?')) {
+                fetch(`/libralink-book/delete/${bookId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                })
+                .then(response => {
+                    if(response.ok) {
+                        document.getElementById('listBooksButton').click();
+                    } else {
+                        throw new Error('Failed to delete book');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+
+</body>
+</html>

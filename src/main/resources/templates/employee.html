@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Employee Management</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+
+    <div class="employee-management-container">
+        <!-- Form for Adding a New Employee -->
+        <div class="employee-form">
+            <h1>Add Employee Details</h1>
+            <img class="generalBookImage" src="https://i.ibb.co/wsrYcX9/desmond.png" alt="General Book Image" />
+            <form id="addEmployeeForm">
+				<h3>Please select Job Role</h3>
+				<select name="jobRoleId" id="jobRoleSelect" required>
+                    <!-- Job roles will be populated here -->
+                </select>
+                <input type="text" name="firstName" placeholder="First Name" required />
+                <input type="text" name="lastName" placeholder="Last Name" required />
+                <input type="number" name="phoneNumber" placeholder="Phone Number" required />
+                <input type="email" name="email" placeholder="Email" required />
+                <input type="number" name="houseNo" placeholder="House No" required />
+                <input type="text" name="lane" placeholder="Lane" required />
+                <input type="text" name="address1" placeholder="Address Line 1" required />
+                <input type="text" name="address2" placeholder="Address Line 2" />
+                <input type="text" name="city" placeholder="City" required />
+                <input type="text" name="state" placeholder="State" required />
+                <input type="number" name="pincode" placeholder="Pincode" required />
+                <h3>Enter Date of Hiring</h3>
+                <input type="date" name="dateOfHire" placeholder="Date of Hiring" required />
+                <button type="submit">Add Employee</button>
+            </form>
+            <div id="employeeMessage"></div>
+        </div>
+
+        <button id="listEmployeesButton">List All Employees</button>
+
+        <!-- Edit Employee Form -->
+        <div id="editEmployeeFormContainer" style="display:none;">
+            <h2>Edit Employee</h2>
+            <form id="editEmployeeForm">
+                <input type="hidden" name="employeeId" id="editEmployeeId" />
+                <select name="jobRoleId" id="editJobRoleSelect" required>
+                    <!-- Job roles will be populated here -->
+                </select>
+                <br>
+                <input type="text" name="firstName" id="editFirstName" placeholder="First Name" required />
+                <input type="text" name="lastName" id="editLastName" placeholder="Last Name" required />
+                <input type="number" name="phoneNumber" id="editPhoneNumber" placeholder="Phone Number" required />
+                <input type="email" name="email" id="editEmail" placeholder="Email" required />
+                <input type="number" name="houseNo" id="editHouseNo" placeholder="House No" required />
+                <input type="text" name="lane" id="editLane" placeholder="Lane" required />
+                <input type="text" name="address1" id="editAddress1" placeholder="Address Line 1" required />
+                <input type="text" name="address2" id="editAddress2" placeholder="Address Line 2" />
+                <input type="text" name="city" id="editCity" placeholder="City" required />
+                <input type="text" name="state" id="editState" placeholder="State" required />
+                <input type="number" name="pincode" id="editPincode" placeholder="Pincode" required />
+                <h3>Enter Date of Hiring</h3>
+                <input type="date" name="dateOfHire" id="editDateOfHire" placeholder="Date of Hiring" required />
+                <br>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+
+        <div id="employeesListContainer"></div>
+    </div>
+
+    <!-- CSRF token variables -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var csrfToken = /*[[${_csrf.token}]]*/ 'default';
+        var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
+        /*]]>*/
+    </script>
+
+    <!-- AJAX request to handle form submission -->
+    <script>
+		        // Function to fetch and populate job roles
+        function populateJobRoles() {
+            fetch('/libralink-jobrole/list')
+                .then(response => response.json())
+                .then(jobRoles => {
+                    const jobRoleSelect = document.getElementById('jobRoleSelect');
+                    const editJobRoleSelect = document.getElementById('editJobRoleSelect');
+
+                    jobRoles.forEach(role => {
+                        jobRoleSelect.options[jobRoleSelect.options.length] = new Option(role.roleName, role.jobRoleId);
+                        editJobRoleSelect.options[editJobRoleSelect.options.length] = new Option(role.roleName, role.jobRoleId);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Call the function to populate job roles
+        populateJobRoles();
+        
+		document.getElementById('addEmployeeForm').addEventListener('submit', function(event) {
+		    event.preventDefault();
+		    const formData = new FormData(this);
+		
+		    // Create a jobRole object from the selected jobRoleId
+		    const jobRoleId = formData.get('jobRoleId');
+		    const jobRole = { jobRoleId: parseInt(jobRoleId) }; // Ensure jobRoleId is sent as a number
+		
+		    // Create a new JSON object including the jobRole object
+		    const jsonData = {};
+		    formData.forEach((value, key) => {
+		        if (key !== 'jobRoleId') {
+		            jsonData[key] = value;
+		        }
+		    });
+		    jsonData['jobRole'] = jobRole;
+		
+		    // Log the JSON body to the console for inspection
+		    console.log("JSON being sent:", jsonData);
+		    
+		    for (const [key, value] of Object.entries(jsonData)) {
+		        console.log(`${key}: ${value}`);
+		    }
+		
+		    fetch('/libralink-employee/add', {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(jsonData),
+		    })
+		    .then(response => {
+		        if(response.ok) {
+		            return response.json();
+		        }
+		        return response.json().then(err => { throw err; });
+		    })
+		    .then(data => {
+		        document.getElementById('employeeMessage').textContent = 'Employee added successfully!';
+		        document.getElementById('employeeMessage').style.color = 'green';
+		        document.getElementById('addEmployeeForm').reset();
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        document.getElementById('employeeMessage').textContent = 'Failed to add employee';
+		        document.getElementById('employeeMessage').style.color = 'red';
+		    });
+		});
+
+
+
+        // Function to display the list of employees
+        document.getElementById('listEmployeesButton').addEventListener('click', function() {
+            fetch('/libralink-employee/list')
+                .then(response => response.json())
+                .then(employees => {
+                    const listContainer = document.getElementById('employeesListContainer');
+                    listContainer.innerHTML = ''; // Clear the container
+
+                    employees.forEach(employee => {
+                        const employeeItem = document.createElement('div');
+                        employeeItem.innerHTML = `
+                            <h3>${employee.firstName} ${employee.lastName}</h3>
+                            <p>Job Role: ${employee.jobRole ? employee.jobRole.roleName : 'Not Assigned'}</p>
+                            <p>Email: ${employee.email}</p>
+					        <p>Phone: ${employee.phoneNumber}</p>
+					        <p>Address: ${employee.houseNo} ${employee.lane}, ${employee.address1}, ${employee.address2}</p>
+					        <p>City: ${employee.city}</p>
+					        <p>State: ${employee.state}</p>
+					        <p>Pincode: ${employee.pincode}</p>
+					        <p>Date of Hiring: ${employee.dateOfHire}</p>
+                            <button onclick="editEmployee(${employee.employeeId})">Edit</button>
+                            <br>
+                            <button onclick="deleteEmployee(${employee.employeeId})">Delete</button>
+                        `;
+                        listContainer.appendChild(employeeItem);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // Function to handle book editing
+        function editEmployee(employeeId) {
+            fetch(`/libralink-employee/get/${employeeId}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to fetch employee details');
+                    }
+                })
+                .then(employee => {
+                    // Fill the form with the current employee's data
+                    document.getElementById('editEmployeeId').value = employee.employeeId;
+		            document.getElementById('editFirstName').value = employee.firstName;
+		            document.getElementById('editLastName').value = employee.lastName;
+		            document.getElementById('editJobRoleSelect').value = employee.jobRole ? employee.jobRole.jobRoleId : '';
+		            document.getElementById('editPhoneNumber').value = employee.phoneNumber;
+		            document.getElementById('editEmail').value = employee.email;
+		            document.getElementById('editHouseNo').value = employee.houseNo;
+		            document.getElementById('editLane').value = employee.lane;
+		            document.getElementById('editAddress1').value = employee.address1;
+		            document.getElementById('editAddress2').value = employee.address2;
+		            document.getElementById('editCity').value = employee.city;
+		            document.getElementById('editState').value = employee.state;
+		            document.getElementById('editPincode').value = employee.pincode;
+		            document.getElementById('editDateOfHire').value = employee.dateOfHire;
+                    document.getElementById('editEmployeeFormContainer').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        document.getElementById('editEmployeeForm').addEventListener('submit', function(event) {
+		    event.preventDefault();
+		    const formData = new FormData(this);
+		
+		    // Convert FormData to an object and modify the jobRoleId to be an object
+		    let jsonData = Object.fromEntries(formData);
+		    jsonData.jobRole = { "jobRoleId": jsonData.jobRoleId };
+		    delete jsonData.jobRoleId; // Remove the original jobRoleId field
+		
+		    console.log("Data being sent for update:", jsonData);
+		
+		    fetch(`/libralink-employee/update`, {
+		        method: 'PUT',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(jsonData)
+		    })
+		    .then(response => {
+		        if(response.ok) {
+		            return response.json();
+		        } else {
+		            throw new Error('Failed to update employee');
+		        }
+		    })
+		    .then(data => {
+		        console.log('Employee updated successfully');
+		        document.getElementById('editEmployeeFormContainer').style.display = 'none';
+		        // Refresh the employee list
+		        document.getElementById('listEmployeesButton').click(); 
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        alert('Failed to update employee: ' + error.message);
+		    });
+		});
+
+
+        // Function to delete an employee
+        function deleteEmployee(employeeId) {
+            if (confirm('Are you sure you want to delete this employee?')) {
+                fetch(`/libralink-employee/delete/${employeeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                })
+                .then(response => {
+                    if(response.ok) {
+                        // Remove the employee from the list
+                    } else {
+                        throw new Error('Failed to delete employee');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+
+</body>
+</html>

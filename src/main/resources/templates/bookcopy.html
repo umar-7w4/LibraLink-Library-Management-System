@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book Copy Management</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <div th:replace="common/header :: common-header"></div>
+
+    <div class="bookcopy-management-container">
+        <!-- Add Book Copy Form -->
+        <div class="bookcopy-form">
+            <h1>Add Book Copy</h1>
+            <img class="generalBookImage" src="https://static3.depositphotos.com/1000528/109/i/450/depositphotos_1093444-stock-photo-old-green-book-isolated.jpg" />
+            
+            <form id="addBookCopyForm">
+                <!-- Search Book Field -->
+                <div class="search-field">
+                    <input class="custom-dropdown" type="text" id="bookSearch" placeholder="Search Book" />
+                    <ul id="bookSearchResults"></ul>
+                    <input type="hidden" name="bookId" id="selectedBookId" required />
+                </div>
+                <!-- Branch Dropdown -->
+                <div class="dropdown-field">
+					<label>Select Branch</label>
+                    <select label="Select Branch" id="branchSelect" name="branchId" required>
+                        <!-- Branch options will be populated here -->
+                    </select>
+                </div>
+                <input type="text" name="status" placeholder="Status" required />
+                <h3>Enter Due Date</h3>
+                <input type="date" name="dueDate" placeholder="Due Date" required />
+                <button type="submit">Add Book Copy</button>
+            </form>
+            <div id="bookCopyMessage"></div>
+        </div>
+
+        <button id="listBookCopiesButton">List All Book Copies</button>
+
+        <!-- Edit Book Copy Form -->
+        <div id="editBookCopyFormContainer" style="display:none;">
+            <h2>Edit Book Copy</h2>
+            <form id="editBookCopyForm">
+                <input type="hidden" name="bookCopyId" id="editBookCopyId" />
+                <!-- Search Book Field for Edit Form -->
+                <div class="search-field">
+                    <input type="text" id="editBookSearch" placeholder="Search Book" />
+                    <ul id="editBookSearchResults"></ul>
+                    <input type="hidden" name="bookId" id="editSelectedBookId" required />
+                </div>
+                <!-- Branch Dropdown for Edit Form -->
+                <label>Select Branch</label>
+                <select id="editBranchSelect" name="branchId" required>
+                    <!-- Branch options for edit form will be populated here -->
+                </select>
+                <br>
+                <input type="text" name="status" id="editStatus" required />
+                <h3>Enter Due Date</h3>
+                <input type="date" name="dueDate" id="editDueDate" required />
+                <br>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+
+        <div id="bookCopiesListContainer"></div>
+    </div>
+
+    <!-- CSRF token variables -->
+    <script th:inline="javascript">
+        var csrfToken = /*[[${_csrf.token}]]*/ 'default';
+        var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
+    </script>
+
+    <!-- JavaScript for Book Copy Operations -->
+	<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadBranches();
+    document.getElementById('listBookCopiesButton').addEventListener('click', listBookCopies);
+    document.getElementById('addBookCopyForm').addEventListener('submit', addBookCopy);
+    document.getElementById('editBookCopyForm').addEventListener('submit', editBookCopy);
+    document.getElementById('bookSearch').addEventListener('input', function(event) {
+        searchBook(event, 'bookSearchResults', 'bookSearch');
+    });
+    document.getElementById('editBookSearch').addEventListener('input', function(event) {
+        searchBook(event, 'editBookSearchResults', 'editBookSearch');
+    });
+});
+
+function loadBranches() {
+    fetch('/libralink-branch/list')
+        .then(response => response.json())
+        .then(branches => {
+            const branchSelect = document.getElementById('branchSelect');
+            const editBranchSelect = document.getElementById('editBranchSelect');
+            
+            branchSelect.innerHTML = '';
+            editBranchSelect.innerHTML = '';
+
+            branches.forEach(branch => {
+                const option = new Option(branch.branchName, branch.branchId);
+                branchSelect.add(option);
+                editBranchSelect.add(option.cloneNode(true));
+            });
+        })
+        .catch(error => {
+            console.error('Error loading branches:', error);
+        });
+}
+
+
+
+function searchBook(event, resultsListId, inputFieldId) {
+    const query = event.target.value;
+    fetch(`/libralink-book/search?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(books => {
+            const resultsList = document.getElementById(resultsListId);
+            resultsList.innerHTML = '';
+            books.forEach(book => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${book.title} by ${book.author}`;
+                listItem.style.cursor = 'pointer';
+                listItem.onclick = function() {
+                    selectBook(book.bookId, `${book.title} by ${book.author}`, inputFieldId, resultsListId);
+                };
+                resultsList.appendChild(listItem);
+            });
+        })
+        .catch(error => console.error('Error searching books:', error));
+}
+
+function selectBook(bookId, bookTitle, inputFieldId, resultsListId) {
+    document.getElementById(inputFieldId).value = bookTitle;
+    document.getElementById('selectedBookId').value = bookId;
+    document.getElementById(resultsListId).innerHTML = '';
+}
+
+function addBookCopy(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const bookCopyData = {
+        book: { bookId: parseInt(formData.get('bookId')) },
+        branch: { branchId: parseInt(formData.get('branchId')) },
+        status: formData.get('status'),
+        dueDate: formData.get('dueDate')
+    };
+
+    fetch('/libralink-bookcopy/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(bookCopyData),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('bookCopyMessage').textContent = 'Book copy added successfully';
+        document.getElementById('bookCopyMessage').style.color = 'green';
+        document.getElementById('addBookCopyForm').reset();
+        listBookCopies(); // Refresh the list after adding
+    })
+    .catch(error => {
+        console.error('Error adding book copy:', error);
+        document.getElementById('bookCopyMessage').textContent = 'Failed to add book copy';
+        document.getElementById('bookCopyMessage').style.color = 'red';
+    });
+}
+
+function listBookCopies() {
+    fetch('/libralink-bookcopy/list')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(bookCopies => {
+            const listContainer = document.getElementById('bookCopiesListContainer');
+            listContainer.innerHTML = '';
+            bookCopies.forEach(copy => {
+                const copyDiv = document.createElement('div');
+                copyDiv.innerHTML = `
+                    <p>Book Title: ${copy.book.title}</p>
+                    <p>Branch Name: ${copy.branch.branchName}</p>
+                    <p>Status: ${copy.status}</p>
+                    <p>Due Date: ${copy.dueDate}</p>
+                    <button onclick="showEditForm(${JSON.stringify(copy).split('"').join("&quot;")})">Edit</button>
+                    <br>
+                    <button onclick="deleteBookCopy(${copy.bookCopyId})">Delete</button>
+                `;
+                listContainer.appendChild(copyDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error listing book copies:', error);
+        });
+}
+
+function showEditForm(bookCopy) {
+    const editForm = document.getElementById('editBookCopyForm');
+    if (!editForm) {
+        console.error('Edit form not found.');
+        return;
+    }
+
+    document.getElementById('editBookCopyId').value = bookCopy.bookCopyId;
+    document.getElementById('editSelectedBookId').value = bookCopy.book.bookId;
+    document.getElementById('editBookSearch').value = bookCopy.book.title; // Assumes book title is available
+    document.getElementById('editStatus').value = bookCopy.status;
+    document.getElementById('editDueDate').value = bookCopy.dueDate;
+
+    loadBranches(); // This function populates the branch dropdowns
+
+    // Set the selected branch value. This assumes that loadBranches populates the dropdown synchronously.
+    document.getElementById('editBranchSelect').value = bookCopy.branch.branchId;
+
+    document.getElementById('editBookCopyFormContainer').style.display = 'block';
+}
+
+
+function editBookCopy(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+console.log("Selected Branch ID:", formData.get('branchId'));
+    const bookCopyData = {
+        bookCopyId: formData.get('bookCopyId'),
+        book: { bookId: parseInt(formData.get('bookId')) },
+        branch: { branchId: parseInt(formData.get('branchId')) },
+        status: formData.get('status'),
+        dueDate: formData.get('dueDate')
+    };
+
+    console.log(bookCopyData); // Log the full data object
+    fetch('/libralink-bookcopy/update', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify(bookCopyData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update book copy');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Book copy updated successfully');
+        document.getElementById('editBookCopyFormContainer').style.display = 'none';
+        listBookCopies();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update book copy: ' + error.message);
+    });
+}
+
+function deleteBookCopy(bookCopyId) {
+    fetch(`/libralink-bookcopy/delete/${bookCopyId}`, {
+        method: 'DELETE',
+        headers: {'CSRF-Token': csrfToken}
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        listBookCopies();
+    })
+    .catch(error => console.error('Error deleting book copy:', error));
+}
+</script>
+</body>
+</html>

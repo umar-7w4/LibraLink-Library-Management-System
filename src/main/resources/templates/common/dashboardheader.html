@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <header th:fragment="common-dashboardheader">
+        <nav>
+            <ul>
+                <li id = "title-dashboardheader"><a th:href="@{/auth/login}">LibraLink - A Library Management System</a></li>
+            </ul>
+        </nav>
+    </header>
+</body>
+</html>
