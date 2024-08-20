@@ -11,6 +11,5 @@ public class ValidationUtil {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
     }
 
-    // You can add more validation methods here
 }
  
