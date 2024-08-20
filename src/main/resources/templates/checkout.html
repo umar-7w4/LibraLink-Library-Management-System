@@ -8,7 +8,7 @@
     <div th:replace="common/header :: common-header"></div>
 
     <div class="checkout-management-container">
-        <!-- Form for Adding a New Checkout -->
+
         <div class="checkout-form">
             <h1>Checkout Book Copy</h1>
              <img class="generalBookImage" src="https://cdn-icons-png.flaticon.com/512/2530/2530626.png" alt="General Book Image" />
@@ -41,14 +41,13 @@
 		    <form id="editCheckoutForm">
 		        <input type="hidden" name="checkoutId" id="editCheckoutId" />
 		
-		        <!-- Lookup Field for Member -->
+
 		        <div class="search-field">
 		            <input type="text" id="editMemberSearch" placeholder="Search Member" />
 		            <ul id="editMemberSearchResults"></ul>
 		            <input type="hidden" name="memberId" id="editSelectedMemberId" required />
 		        </div>
-		
-		        <!-- Lookup Field for Book Copy -->
+
 		        <div class="search-field">
 		            <input type="text" id="editBookCopySearch" placeholder="Search Book Copy" />
 		            <ul id="editBookCopySearchResults"></ul>
@@ -68,7 +67,7 @@
         <div id="checkoutsListContainer"></div>
     </div>
 
-    <!-- CSRF token variables -->
+
     <script th:inline="javascript">
         /*<![CDATA[*/
         var csrfToken = /*[[${_csrf.token}]]*/ 'default';
@@ -76,13 +75,12 @@
         /*]]>*/
     </script>
 
-    <!-- JavaScript for Checkout Operations -->
+
     <script>
 		document.getElementById('listCheckoutsButton').addEventListener('click', function() {
 		        listCheckouts();
 		    });
 		
-		    // Function to List All Checkouts
 		    function listCheckouts() {
 		        fetch('/libralink-checkout/list', {
 		            method: 'GET',
@@ -98,9 +96,8 @@
 		        })
 		        .then(checkouts => {
 		            const checkoutsListContainer = document.getElementById('checkoutsListContainer');
-		            checkoutsListContainer.innerHTML = ''; // Clear previous records
+		            checkoutsListContainer.innerHTML = ''; 
 		
-		            // Loop through the checkout records and display them
 		            checkouts.forEach(checkout => {
 		                const checkoutItem = document.createElement('div');
 		                checkoutItem.innerHTML = `
@@ -119,24 +116,22 @@
 		        })
 		        .catch(error => {
 		            console.error('Error:', error);
-		            // Display an error message to the user
+		
 		            const errorMessage = document.getElementById('checkoutErrorMessage');
 		            errorMessage.textContent = 'An error occurred while fetching checkout records.';
 		            errorMessage.style.color = 'red';
 		        });
 		    }
     
-        // Add Checkout Form Submission
         document.getElementById('addCheckoutForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
             const jsonData = Object.fromEntries(formData);
-            // Call the function to add a new checkout
+
             addCheckout(jsonData);
         });
 
 		function addCheckout(checkoutData) {
-		    // Parse memberId and bookCopyId as integers and wrap them in objects
 		    const payload = {
 		        member: { memberId: parseInt(checkoutData.memberId) },
 		        bookCopy: { bookCopyId: parseInt(checkoutData.bookCopyId) },
@@ -161,7 +156,6 @@
 		    })
 		    .then(data => {
 		        document.getElementById('checkoutMessage').textContent = 'Checkout added successfully';
-		        // Additional logic...
 		    })
 		    .catch(error => {
 		        console.error('Error:', error);
@@ -169,7 +163,6 @@
 		    });
 		}
 
-// Function to search for members
 function searchMember(query, isEditMode) {
     fetch(`/libralink-member/search?query=${encodeURIComponent(query)}`, {
         method: 'GET',
@@ -182,7 +175,6 @@ function searchMember(query, isEditMode) {
     .catch(error => console.error('Error:', error));
 }
 
-// Function to display member search results
 function displayMemberResults(memberResults, isEditMode) {
     const memberSearchResultsId = isEditMode ? 'editMemberSearchResults' : 'memberSearchResults';
     const memberSearchResults = document.getElementById(memberSearchResultsId);
@@ -196,7 +188,6 @@ function displayMemberResults(memberResults, isEditMode) {
     });
 }
 
-// Function to handle selecting a member from search results
 function selectMember(memberId, memberName, isEditMode) {
     const selectedMemberIdField = document.getElementById(isEditMode ? 'editSelectedMemberId' : 'selectedMemberId');
     const memberSearchField = document.getElementById(isEditMode ? 'editMemberSearch' : 'memberSearch');
@@ -207,7 +198,6 @@ function selectMember(memberId, memberName, isEditMode) {
     memberSearchResults.innerHTML = '';
 }
 
-// Function to search for book copies
 function searchBookCopy(query, isEditMode) {
     fetch(`/libralink-bookcopy/search?query=${encodeURIComponent(query)}`, {
         method: 'GET',
@@ -220,7 +210,6 @@ function searchBookCopy(query, isEditMode) {
     .catch(error => console.error('Error:', error));
 }
 
-// Function to display book copy search results
 function displayBookCopyResults(bookCopyResults, isEditMode) {
     const bookCopySearchResultsId = isEditMode ? 'editBookCopySearchResults' : 'bookCopySearchResults';
     const bookCopySearchResults = document.getElementById(bookCopySearchResultsId);
@@ -234,7 +223,6 @@ function displayBookCopyResults(bookCopyResults, isEditMode) {
     });
 }
 
-// Function to handle selecting a book copy from search results
 function selectBookCopy(bookCopyId, bookCopyDetails, isEditMode) {
     const selectedBookCopyIdField = document.getElementById(isEditMode ? 'editSelectedBookCopyId' : 'selectedBookCopyId');
     const bookCopySearchField = document.getElementById(isEditMode ? 'editBookCopySearch' : 'bookCopySearch');
@@ -245,7 +233,6 @@ function selectBookCopy(bookCopyId, bookCopyDetails, isEditMode) {
     bookCopySearchResults.innerHTML = '';
 }
 
-// Add event listeners to the search fields in the "Add Checkout" form
 document.getElementById('memberSearch').addEventListener('input', function() {
     searchMember(this.value, false);
 });
@@ -254,7 +241,6 @@ document.getElementById('bookCopySearch').addEventListener('input', function() {
     searchBookCopy(this.value, false);
 });
 
-// Add event listeners to the search fields in the "Edit Checkout" form
 document.getElementById('editMemberSearch').addEventListener('input', function() {
     searchMember(this.value, true);
 });
@@ -276,24 +262,22 @@ function editCheckout(checkoutId) {
             }
         })
         .then(checkout => {
-            // Check if the editCheckoutId element exists
             const editCheckoutId = document.getElementById('editCheckoutId');
             if (!editCheckoutId) {
                 console.error('editCheckoutId element not found');
                 return;
             }
 
-            // Populate the form fields with checkout data
             if (checkout.checkoutId) {
                 editCheckoutId.value = checkout.checkoutId;
             }
             const editMemberSelect = document.getElementById('editMemberSelect');
             if (editMemberSelect) {
-                editMemberSelect.value = checkout.member.memberId; // Assuming member is an object
+                editMemberSelect.value = checkout.member.memberId; 
             }
             const editBookSelect = document.getElementById('editBookSelect');
             if (editBookSelect) {
-                editBookSelect.value = checkout.bookCopy.bookCopyId; // Assuming bookCopy is an object
+                editBookSelect.value = checkout.bookCopy.bookCopyId;
             }
             const editCheckoutDate = document.getElementById('editCheckoutDate');
             if (editCheckoutDate) {
@@ -322,8 +306,6 @@ function editCheckout(checkoutId) {
 }
 
 
-		
-// Event listener for editing a checkout
 document.getElementById('editCheckoutForm').addEventListener('submit', function (event) {
     event.preventDefault();
     const formData = new FormData(this);
@@ -340,38 +322,30 @@ document.getElementById('editCheckoutForm').addEventListener('submit', function 
             returnDate: formData.get('returnDate'),
        
     };
-
-    // Call the updateCheckout function to update the checkout
     updateCheckout(checkoutId, jsonData);
 });
 
-// Function to update a checkout
 function updateCheckout(checkoutId, checkoutData) {
 	console.log(checkoutData);
-    // Send the entire updated checkout object to the backend
     fetch('/libralink-checkout/update', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             [csrfHeader]: csrfToken,
         },
-        body: JSON.stringify(checkoutData), // Send the entire checkoutData object
+        body: JSON.stringify(checkoutData), 
     })
     .then(response => {
         if (!response.ok) {
             throw new Error('Failed to update checkout');
         }
-        // Handle the success response or refresh the list
-        return response.json(); // You can return data from the server if needed
+        return response.json();
     })
     .then(data => {
-        // Handle the success response or refresh the list
         console.log('Checkout updated successfully:', data);
-        // Additional logic...
     })
     .catch(error => {
         console.error('Error:', error);
-        // Display error message or handle the error
     });
 }
 
@@ -386,7 +360,6 @@ function updateCheckout(checkoutId, checkoutData) {
 		        })
 		        .then(response => {
 		            if (response.ok) {
-		                // Handle the successful deletion
 		                console.log('Checkout deleted successfully');
 		            } else {
 		                throw new Error('Failed to delete checkout');
@@ -394,7 +367,6 @@ function updateCheckout(checkoutId, checkoutData) {
 		        })
 		        .catch(error => {
 		            console.error('Error:', error);
-		            // Display an error message to the user
 		            const errorMessage = document.getElementById('checkoutErrorMessage');
 		            errorMessage.textContent = 'An error occurred while deleting the checkout.';
 		            errorMessage.style.color = 'red';
