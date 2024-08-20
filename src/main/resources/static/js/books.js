@@ -29,11 +29,3 @@ function loadBooks() {
         })
         .catch(error => console.error('Error loading books:', error));
 }
-
-function updateBook(bookId) {
- 
-}
-
-function deleteBook(bookId) {
-
-}
