@@ -8,23 +8,23 @@
     <div th:replace="common/header :: common-header"></div>
 
     <div class="bookcopy-management-container">
-        <!-- Add Book Copy Form -->
+
         <div class="bookcopy-form">
             <h1>Add Book Copy</h1>
             <img class="generalBookImage" src="https://static3.depositphotos.com/1000528/109/i/450/depositphotos_1093444-stock-photo-old-green-book-isolated.jpg" />
             
             <form id="addBookCopyForm">
-                <!-- Search Book Field -->
+
                 <div class="search-field">
                     <input class="custom-dropdown" type="text" id="bookSearch" placeholder="Search Book" />
                     <ul id="bookSearchResults"></ul>
                     <input type="hidden" name="bookId" id="selectedBookId" required />
                 </div>
-                <!-- Branch Dropdown -->
+
                 <div class="dropdown-field">
 					<label>Select Branch</label>
                     <select label="Select Branch" id="branchSelect" name="branchId" required>
-                        <!-- Branch options will be populated here -->
+
                     </select>
                 </div>
                 <input type="text" name="status" placeholder="Status" required />
@@ -37,21 +37,21 @@
 
         <button id="listBookCopiesButton">List All Book Copies</button>
 
-        <!-- Edit Book Copy Form -->
+
         <div id="editBookCopyFormContainer" style="display:none;">
             <h2>Edit Book Copy</h2>
             <form id="editBookCopyForm">
                 <input type="hidden" name="bookCopyId" id="editBookCopyId" />
-                <!-- Search Book Field for Edit Form -->
+ 
                 <div class="search-field">
                     <input type="text" id="editBookSearch" placeholder="Search Book" />
                     <ul id="editBookSearchResults"></ul>
                     <input type="hidden" name="bookId" id="editSelectedBookId" required />
                 </div>
-                <!-- Branch Dropdown for Edit Form -->
+
                 <label>Select Branch</label>
                 <select id="editBranchSelect" name="branchId" required>
-                    <!-- Branch options for edit form will be populated here -->
+
                 </select>
                 <br>
                 <input type="text" name="status" id="editStatus" required />
@@ -65,13 +65,11 @@
         <div id="bookCopiesListContainer"></div>
     </div>
 
-    <!-- CSRF token variables -->
+
     <script th:inline="javascript">
         var csrfToken = /*[[${_csrf.token}]]*/ 'default';
         var csrfHeader = /*[[${_csrf.headerName}]]*/ 'default';
     </script>
-
-    <!-- JavaScript for Book Copy Operations -->
 	<script>
 
 document.addEventListener('DOMContentLoaded', function() {
