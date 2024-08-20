@@ -1,5 +1,3 @@
-
-/* Bookcopy Management Container */
 .bookcopy-management-container {
     width: 80%;
     max-width: 800px;
@@ -10,7 +8,6 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Bookcopy Form */
 .bookcopy-form {
     margin-bottom: 30px;
     padding: 20px;
@@ -38,7 +35,7 @@
 }
 
 .bookcopy-form button {
-    background-color: #007bff; /* Blue for add/update */
+    background-color: #007bff; 
     color: white;
     border: none;
     cursor: pointer;
@@ -47,15 +44,13 @@
 }
 
 .bookcopy-form button.delete-button {
-    background-color: #ff4646; /* Red for delete */
+    background-color: #ff4646; 
 }
 
 .bookcopy-form button:hover {
     background-color: #0056b3;
     opacity: 0.9;
 }
-
-/* Responsive Design for Bookcopy Management */
 @media (max-width: 768px) {
     .bookcopy-management-container {
         width: 90%;
@@ -63,10 +58,9 @@
     }
 }
 
-/* Show Bookcopies Button */
 #show-bookcopies {
     padding: 12px 24px;
-    background-color: #4CAF50; /* Green background */
+    background-color: #4CAF50; 
     color: white;
     border: none;
     border-radius: 6px;
@@ -80,7 +74,7 @@
     background-color: #45a049;
 }
 
-/* Bookcopy List Container */
+
 .bookcopy-list {
     width: 100%;
     padding: 20px;
@@ -90,7 +84,7 @@
     margin-bottom: 20px;
 }
 
-/* Individual Bookcopy Item */
+
 .bookcopy-item {
     border-bottom: 1px solid #ccc;
     padding: 12px 0;
@@ -119,10 +113,9 @@
 }
 
 
-/* Custom Header Styling */
 .custom-header {
-    background-color: #333; /* Background color */
-    color: #fff; /* Text color */
+    background-color: #333;
+    color: #fff; 
     padding: 10px 0;
 }
 
@@ -137,28 +130,28 @@
 
 .nav-link {
     text-decoration: none;
-    color: #fff; /* Link color */
+    color: #fff; 
     padding: 10px 20px;
     transition: background-color 0.3s ease;
 }
 
 .nav-link:hover {
-    background-color: #555; /* Hover color */
+    background-color: #555; 
 }
 
 .divider {
     width: 2px;
     height: 20px;
-    background-color: #fff; /* Divider color */
+    background-color: #fff; 
 }
 
 .admin-link {
-    background-color: #28a745; /* Admin link color */
+    background-color: #28a745; 
     font-weight: bold;
 }
 
 .logout-button {
-    background-color: #dc3545; /* Logout button color */
+    background-color: #dc3545;
     color: #fff;
     border: none;
     cursor: pointer;
