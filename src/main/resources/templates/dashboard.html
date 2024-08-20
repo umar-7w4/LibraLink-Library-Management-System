@@ -105,7 +105,7 @@
         });
 
         function updateDashboardCounts() {
-            // Fetch Total Books
+
             fetch('/libralink-book/books/count')
                 .then(response => response.json())
                 .then(data => {
@@ -113,7 +113,7 @@
                 })
                 .catch(error => console.error('Error fetching total books:', error));
 
-            // Fetch Total Members
+
             fetch('/libralink-member/members/count')
                 .then(response => response.json())
                 .then(data => {
@@ -121,7 +121,7 @@
                 })
                 .catch(error => console.error('Error fetching total members:', error));
 
-            // Fetch Total Employees
+
             fetch('/libralink-employee/employees/count')
                 .then(response => response.json())
                 .then(data => {
@@ -132,7 +132,6 @@
         
 
     function initCharts() {
-            // Assume fetchChartData() fetches the required chart data
             fetchChartData().then(chartData => {
                 const labels = Object.keys(chartData);
                 const data = Object.values(chartData);
@@ -147,7 +146,6 @@
         }
 
     function initChartsForBookAuthor() {
-            // Assume fetchChartData() fetches the required chart data
             fetchChartDataForBookAuthor().then(chartData => {
                 const labels = Object.keys(chartData);
                 const data = Object.values(chartData);
@@ -160,10 +158,8 @@
                 console.error('Error fetching chart data:', error);
             });
         }
-        
-    // This function should be modified to call your actual API endpoint
+
     function fetchChartData() {
-        // Replace '/api/chart-data' with your endpoint that provides genre count
         return fetch('/libralink-book/genre-count')
             .then(response => {
                 if (!response.ok) {
