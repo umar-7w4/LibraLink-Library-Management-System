@@ -35,7 +35,6 @@
                 <li th:if="${isAdmin}"><a th:href="@{/admin}" class="nav-link admin-link">Admin Panel</a></li>
                 <li>
                     <form th:action="@{/perform_logout}" method="post">
-                        <!-- CSRF token is automatically included by Thymeleaf -->
                         <button type="submit" class="logout-button">Logout</button>
                     </form>
                 </li>
