@@ -8,7 +8,6 @@
     <div th:replace="common/header :: common-header"></div>
 
     <div class="member-management-container">
-        <!-- Form for Adding a New Member -->
         <div class="member-form">
             <h1>Add Premium Subscription</h1>
             <img class="generalBookImage" src="https://th.bing.com/th/id/R.f7796bf18c3b3eca8acbd328904b2e13?rik=DyWuJ2%2bHEQMCsg&pid=ImgRaw&r=0" />
@@ -34,7 +33,6 @@
 
         <button id="listMembersButton">List All Members</button>
 
-        <!-- Edit Member Form -->
         <div id="editMemberFormContainer" style="display:none;">
             <h2>Edit Member</h2>
             <form id="editMemberForm">
@@ -60,7 +58,6 @@
         <div id="membersListContainer"></div>
     </div>
 
-    <!-- CSRF token variables -->
     <script th:inline="javascript">
         /*<![CDATA[*/
         var csrfToken = /*[[${_csrf.token}]]*/ 'default';
@@ -68,7 +65,6 @@
         /*]]>*/
     </script>
 
-    <!-- AJAX request to handle form submission -->
     <script>
         document.getElementById('addMemberForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -105,17 +101,16 @@
             });
         });
 
-        // Function to display the list of members
         document.getElementById('listMembersButton').addEventListener('click', function() {
             fetch('/libralink-member/list')
                 .then(response => response.json())
                 .then(members => {
                     const listContainer = document.getElementById('membersListContainer');
-                    listContainer.innerHTML = ''; // Clear the container
+                    listContainer.innerHTML = ''; 
 
 					members.forEach(member => {
 					    const memberItem = document.createElement('div');
-					    memberItem.classList.add('member-item'); // Add class for styling if needed
+					    memberItem.classList.add('member-item'); 
 					    memberItem.innerHTML = `
 					        <h3>${member.firstName} ${member.lastName}</h3>
 					        <p>Email: ${member.email}</p>
@@ -146,7 +141,6 @@
 		            }
 		        })
 		        .then(member => {
-		            // Fill the form with the current member's data
 		            document.getElementById('editMemberId').value = member.memberId;
 		            document.getElementById('editFirstName').value = member.firstName;
 		            document.getElementById('editLastName').value = member.lastName;
@@ -161,15 +155,14 @@
 		            document.getElementById('editPincode').value = member.pincode;
 		            document.getElementById('editMembershipExpirationDate').value = member.membershipExpirationDate;
 		            
-		            // Show the edit form
+
 		            document.getElementById('editMemberFormContainer').style.display = 'block';
 		        })
 		        .catch(error => {
 		            console.error('Error:', error);
 		        });
 		}
-		
-		// Function to handle the update member form submission
+
         document.getElementById('editMemberForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
@@ -193,7 +186,7 @@
             .then(data => {
                 console.log('Member updated successfully');
                 document.getElementById('editMemberFormContainer').style.display = 'none';
-                // Refresh the member list
+
                 document.getElementById('listMembersButton').click(); 
             })
             .catch(error => console.error('Error:', error));
@@ -205,12 +198,11 @@
 		        fetch(`/libralink-member/delete/${memberId}`, {
 		            method: 'DELETE',
 		            headers: {
-		                [csrfHeader]: csrfToken  // Include CSRF token if required
+		                [csrfHeader]: csrfToken 
 		            }
 		        })
 		        .then(response => {
 		            if(response.ok) {
-		                // Remove the member from the list in the UI or refresh the list
 		                console.log('Member deleted successfully');
 		            } else {
 		                throw new Error('Failed to delete member');
