@@ -8,7 +8,7 @@
     <div th:replace="common/header :: common-header"></div>
 
     <div class="book-management-container">
-        <!-- Form for Adding a New Book -->
+
         <div class="book-form">
             <h1>Register Book Records</h1>
             <img class="generalBookImage" src="https://i.pinimg.com/originals/7d/5a/aa/7d5aaa0eefdc25018534c3dfb5546d7e.jpg" alt="General Book Image" />
@@ -28,7 +28,7 @@
 
         <button id="listBooksButton">List All Books</button>
         
-        <!-- Edit Book Form -->
+
         <div id="editBookFormContainer" style="display:none;">
             <h2>Edit Book</h2>
             <form id="editBookForm">
@@ -45,13 +45,11 @@
             </form>
         </div>
         
-        <!-- Placeholder for General Book Image -->
-    
         
         <div id="booksListContainer"></div>
     </div>
 
-    <!-- CSRF token variables -->
+
     <script th:inline="javascript">
         /*<![CDATA[*/
         var csrfToken = /*[[${_csrf.token}]]*/ 'default';
