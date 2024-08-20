@@ -162,7 +162,7 @@ function addBookCopy(event) {
         document.getElementById('bookCopyMessage').textContent = 'Book copy added successfully';
         document.getElementById('bookCopyMessage').style.color = 'green';
         document.getElementById('addBookCopyForm').reset();
-        listBookCopies(); // Refresh the list after adding
+        listBookCopies(); 
     })
     .catch(error => {
         console.error('Error adding book copy:', error);
@@ -210,13 +210,12 @@ function showEditForm(bookCopy) {
 
     document.getElementById('editBookCopyId').value = bookCopy.bookCopyId;
     document.getElementById('editSelectedBookId').value = bookCopy.book.bookId;
-    document.getElementById('editBookSearch').value = bookCopy.book.title; // Assumes book title is available
+    document.getElementById('editBookSearch').value = bookCopy.book.title; 
     document.getElementById('editStatus').value = bookCopy.status;
     document.getElementById('editDueDate').value = bookCopy.dueDate;
 
-    loadBranches(); // This function populates the branch dropdowns
+    loadBranches(); 
 
-    // Set the selected branch value. This assumes that loadBranches populates the dropdown synchronously.
     document.getElementById('editBranchSelect').value = bookCopy.branch.branchId;
 
     document.getElementById('editBookCopyFormContainer').style.display = 'block';
@@ -235,7 +234,7 @@ console.log("Selected Branch ID:", formData.get('branchId'));
         dueDate: formData.get('dueDate')
     };
 
-    console.log(bookCopyData); // Log the full data object
+    console.log(bookCopyData); 
     fetch('/libralink-bookcopy/update', {
         method: 'PUT',
         headers: {
