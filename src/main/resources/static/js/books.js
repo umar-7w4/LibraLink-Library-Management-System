@@ -31,9 +31,9 @@ function loadBooks() {
 }
 
 function updateBook(bookId) {
-    // Implementation needed
+ 
 }
 
 function deleteBook(bookId) {
-    // Implementation needed
+
 }
