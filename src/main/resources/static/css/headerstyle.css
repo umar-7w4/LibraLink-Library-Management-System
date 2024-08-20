@@ -1,7 +1,6 @@
-/* Custom Header Styling */
 .custom-header {
-    background-color: #333; /* Background color */
-    color: #fff; /* Text color */
+    background-color: #333; 
+    color: #fff;
     padding: 10px 0;
 }
 
@@ -16,28 +15,28 @@
 
 .nav-link {
     text-decoration: none;
-    color: #fff; /* Link color */
+    color: #fff; 
     padding: 10px 20px;
     transition: background-color 0.3s ease;
 }
 
 .nav-link:hover {
-    background-color: #555; /* Hover color */
+    background-color: #555; 
 }
 
 .divider {
     width: 2px;
     height: 20px;
-    background-color: #fff; /* Divider color */
+    background-color: #fff; 
 }
 
 .admin-link {
-    background-color: #28a745; /* Admin link color */
+    background-color: #28a745; 
     font-weight: bold;
 }
 
 .logout-button {
-    background-color: #dc3545; /* Logout button color */
+    background-color: #dc3545;
     color: #fff;
     border: none;
     cursor: pointer;
