@@ -5,6 +5,10 @@ LibraLink is a library management system that I built mainly for library admins.
 
 The project aims to incorporate both basic and advanced functionalities over time, enhancing the overall library management experience.
 
+## Entity Relationship Diagram 
+
+![LibraLink](https://github.com/umar-7w4/LibraLink-Library-Management-System/blob/main/ERD%20Libralink.png)
+
 ## Prerequisites
 Before you begin, ensure you have met the following requirements:
 - Java JDK 11 or higher installed
